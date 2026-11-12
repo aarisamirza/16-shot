@@ -384,6 +384,7 @@ section { scroll-margin-top: 12px; }
 h1#challenge-h { font-size: clamp(2.1rem, 9.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; }
 main > section:first-child { padding-top: 28px; }
 footer .wrap a { color: var(--cuff); }
+.card .place { position: absolute; top: 12px; right: 12px; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; background: #157A6B; padding: 3px 8px; border-radius: 999px; }
 </style>
 </head>
 <body>
@@ -483,7 +484,12 @@ footer .wrap a { color: var(--cuff); }
     ["Patterns made by people, not by nature.", "Observation"],
     ["Your hands, doing 16 different things.", "Variation on a theme"],
     ["Find faces in places that have none.", "Imagination"],
-    ["A tradition or craft, spotted in today's streets.", "Heritage in context"]
+    ["A tradition or craft, spotted in today's streets.", "Heritage in context"],
+    ["Look up. Sixteen ceilings, rooflines and canopies at ITB.", "Changing perspective", "Bandung"],
+    ["Find sixteen signs that tell you where to go.", "Wayfinding", "Bandung"],
+    ["Hands at the conference: holding, pointing, sketching, typing.", "Variation on a theme", "Bandung"],
+    ["Your day, from the hotel door to your seat.", "Visual storytelling", "Bandung"],
+    ["Bandung in one colour. Choose it before your first shot.", "Working within constraints", "Bandung"]
   ];
   var TOTAL = 16;
   var dealEl = document.getElementById("deal"), dealView = document.getElementById("deal-view"), rollView = document.getElementById("roll-view");
@@ -491,10 +497,17 @@ footer .wrap a { color: var(--cuff); }
   var shootBtn = document.getElementById("shoot"), rollActions = document.getElementById("roll-actions"), doneEl = document.getElementById("done");
   var last = [], shots = 0;
 
+  function atConference() { var n = new Date(); return n >= new Date(2026, 10, 29) && n < new Date(2026, 11, 2); }
   function pick3() {
     var pool = PROMPTS.map(function (p, i) { return i; }).filter(function (i) { return last.indexOf(i) < 0; });
     for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
-    last = pool.slice(0, 3); return last;
+    var hand = pool.slice(0, 3);
+    /* During the conference, every deal includes at least one Bandung card */
+    if (atConference() && !hand.some(function (i) { return PROMPTS[i][2]; })) {
+      var b = pool.slice(3).filter(function (i) { return PROMPTS[i][2]; })[0];
+      if (b !== undefined) hand[Math.floor(Math.random() * 3)] = b;
+    }
+    last = hand; return last;
   }
   function deal() {
     dealEl.innerHTML = "";
@@ -502,9 +515,9 @@ footer .wrap a { color: var(--cuff); }
       var b = document.createElement("button");
       b.type = "button"; b.className = "card"; b.id = "card-" + n;
       var BANDS = ["#E2603A", "#C8DE3E", "#3B3187", "#4F44A6"];
-      b.style.setProperty("--band", BANDS[idx % BANDS.length]);
+      b.style.setProperty("--band", PROMPTS[idx][2] ? "#157A6B" : BANDS[idx % BANDS.length]);
       b.style.setProperty("--delay", (n * 90) + "ms");
-      b.innerHTML = '<span class="no">No. ' + (idx < 9 ? "0" : "") + (idx + 1) + '</span><span class="q"></span><span class="skill"></span>';
+      b.innerHTML = '<span class="no">No. ' + (idx < 9 ? "0" : "") + (idx + 1) + '</span>' + (PROMPTS[idx][2] ? '<span class="place">' + PROMPTS[idx][2] + '</span>' : '') + '<span class="q"></span><span class="skill"></span>';
       b.querySelector(".q").textContent = PROMPTS[idx][0];
       b.querySelector(".skill").textContent = PROMPTS[idx][1];
       b.addEventListener("click", function () { startRoll(idx); });
